@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PokéIdle Trainer</n<title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+    body { display: flex; justify-content: center; align-items: center; height: 100vh; background: #f8f8f8; }
+    #game, #selector { width: 90%; max-width: 600px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    #selector { text-align: center; }
+    .poke-option { cursor: pointer; display: inline-block; margin: 10px; }
+    .poke-option img { width: 80px; height: 80px; }
+    .stats { margin: 10px 0; }
+    .stats span { display: inline-block; margin-right: 15px; }
+    .btn { display: block; width: 100%; padding: 10px; margin-top: 10px; background: #4CAF50; color: white; border: none; border-radius: 4px; font-size: 1rem; cursor: pointer; }
+    .btn:disabled { background: #aaa; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+  <div id="selector">
+    <h2>Choisis ton Pokémon de départ</h2>
+    <div class="poke-option" data-id="1" data-evolved="1">
+      <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/1.png" alt="Bulbasaur"><br>
+      <span>Bulbasaur</span>
+    </div>
+    <div class="poke-option" data-id="4" data-evolved="2">
+      <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/4.png" alt="Charmander"><br>
+      <span>Charmander</span>
+    </div>
+    <div class="poke-option" data-id="7" data-evolved="8">
+      <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/7.png" alt="Squirtle"><br>
+      <span>Squirtle</span>
+    </div>
+  </div>
+
+  <div id="game" style="display:none; text-align:center;">
+    <h2 id="poke-name"></h2>
+    <img id="poke-sprite" src="" alt="Pokémon"><br>
+    <div class="stats">
+      <span>XP: <strong id="xp">0</strong></span>
+      <span>Argent: <strong id="money">0</strong></span>
+    </div>
+    <button class="btn" id="upgrade-attack">Améliorer Attaque (Coûte: <span id="cost-attack">10</span>)</button>
+    <button class="btn" id="upgrade-speed">Améliorer Vitesse (Coûte: <span id="cost-speed">20</span>)</button>
+  </div>
+
+  <script>
+    const selector = document.getElementById('selector');
+    const game = document.getElementById('game');
+    const pokeName = document.getElementById('poke-name');
+    const pokeSprite = document.getElementById('poke-sprite');
+    const xpEl = document.getElementById('xp');
+    const moneyEl = document.getElementById('money');
+    const btnAttack = document.getElementById('upgrade-attack');
+    const btnSpeed = document.getElementById('upgrade-speed');
+    const costAttackEl = document.getElementById('cost-attack');
+    const costSpeedEl = document.getElementById('cost-speed');
+
+    let xp = 0, money = 0;
+    let attackPower = 1;
+    let attackInterval = 1000;
+    let attackTimer;
+    let chosen;
+
+    document.querySelectorAll('.poke-option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        const id = opt.dataset.id;
+        const evolvedId = opt.dataset.evolved;
+        const name = opt.innerText;
+        startGame({ id, evolvedId, name });
+      });
+    });
+
+    function startGame(pokemon) {
+      chosen = pokemon;
+      selector.style.display = 'none';
+      game.style.display = 'block';
+      pokeName.innerText = pokemon.name;
+      pokeSprite.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png`;
+      attackTimer = setInterval(attack, attackInterval);
+    }
+
+    function attack() {
+      xp += attackPower;
+      money += 1;
+      xpEl.innerText = xp;
+      moneyEl.innerText = money;
+      checkEvolution();
+    }
+
+    function checkEvolution() {
+      if (xp >= 16 && chosen.id !== chosen.evolvedId) {
+        chosen.id = chosen.evolvedId;
+        pokeSprite.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${chosen.id}.png`;
+      }
+    }
+
+    btnAttack.addEventListener('click', () => {
+      const cost = parseInt(costAttackEl.innerText);
+      if (money >= cost) {
+        money -= cost;
+        attackPower += 1;
+        costAttackEl.innerText = Math.floor(cost * 1.5);
+        moneyEl.innerText = money;
+      }
+    });
+
+    btnSpeed.addEventListener('click', () => {
+      const cost = parseInt(costSpeedEl.innerText);
+      if (money >= cost) {
+        money -= cost;
+        attackInterval = Math.max(200, attackInterval - 100);
+        clearInterval(attackTimer);
+        attackTimer = setInterval(attack, attackInterval);
+        costSpeedEl.innerText = Math.floor(cost * 1.7);
+        moneyEl.innerText = money;
+      }
+    });
+  </script>
+</body>
+</html>
